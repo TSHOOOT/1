@@ -1,0 +1,2119 @@
+ !
+!
+!
+
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname CE_KC
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+ip dhcp pool POOL
+ network 10.200.200.0 255.255.255.0
+ default-router 10.200.200.254 
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ ip address 10.200.200.254 255.255.255.0
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 172.16.4.4 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ ip address 10.1.2.2 255.255.255.0
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 101
+ network 10.1.2.0 0.0.0.255 area 0
+ network 10.200.200.0 0.0.0.255 area 0
+ network 172.16.4.0 0.0.0.255 area 0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname CE_OS
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+crypto isakmp key cisco123 address 93.1.1.1       
+crypto isakmp key cisco123 address 93.1.1.2       
+!
+!
+crypto ipsec transform-set TS esp-aes esp-sha-hmac 
+ mode tunnel
+!
+!
+!
+crypto map MAP 10 ipsec-isakmp 
+ set peer 93.1.1.1
+ set transform-set TS 
+ match address IPSEC1
+crypto map MAP 20 ipsec-isakmp 
+ set peer 93.1.1.2
+ set transform-set TS 
+ match address IPSEC2
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 192.168.103.1 255.255.255.0
+ ip ospf network point-to-point
+!
+interface Tunnel1
+ ip address 172.16.13.2 255.255.255.0
+ tunnel source Serial6/1
+ tunnel destination 93.1.1.1
+!
+interface Tunnel2
+ bandwidth 10
+ ip address 172.16.23.2 255.255.255.0
+ tunnel source Serial6/1
+ tunnel destination 93.1.1.2
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 172.16.3.3 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly in
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ ip address 89.1.3.1 255.255.255.0
+ ip access-group ACL_IN in
+ ip nat outside
+ ip virtual-reassembly in
+ serial restart-delay 0
+ crypto map MAP
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+!
+router eigrp 1
+ network 172.16.13.0 0.0.0.255
+ network 172.16.23.0 0.0.0.255
+ network 192.168.103.0
+ redistribute ospf 101 metric 1000000 100 255 1 1500
+!
+router ospf 101
+ redistribute eigrp 1 subnets
+ network 172.16.3.0 0.0.0.255 area 0
+ network 192.168.103.0 0.0.0.255 area 0
+ default-information originate
+!
+router ospf 1
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip nat inside source list NAT interface Serial6/1 overload
+ip route 0.0.0.0 0.0.0.0 89.1.3.254
+!
+ip access-list standard FILTER
+ deny   89.1.3.0 0.0.0.255
+ permit any
+!
+ip access-list extended ACL_IN
+ permit udp any host 89.1.3.1 eq isakmp
+ permit gre any host 89.1.3.1
+ permit esp any host 89.1.3.1
+ permit icmp any host 89.1.3.1 echo-reply
+ deny   ip any any
+ip access-list extended IPSEC1
+ permit gre host 89.1.3.1 host 93.1.1.1
+ip access-list extended IPSEC2
+ permit gre host 89.1.3.1 host 93.1.1.2
+ip access-list extended NAT
+ deny   ip any 10.0.0.0 0.255.255.255
+ deny   ip any 172.16.0.0 0.15.255.255
+ deny   ip any 192.168.0.0 0.0.255.255
+ permit ip 172.16.0.0 0.15.255.255 any
+ permit ip 192.168.0.0 0.0.255.255 any
+ permit ip 10.0.0.0 0.255.255.255 any
+!
+no cdp log mismatch duplex
+!
+route-map MAP permit 10
+ match ip address FILTER
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+
+!
+! Last configuration change at 13:26:39 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname CE_ZG
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+ip dhcp pool POOL
+ network 10.100.100.0 255.255.255.0
+ default-router 10.100.100.254 
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+crypto isakmp key cisco123 address 93.1.1.1       
+crypto isakmp key cisco123 address 93.1.1.2       
+!
+!
+crypto ipsec transform-set TS esp-aes esp-sha-hmac 
+ mode tunnel
+!
+!
+!
+crypto map MAP 10 ipsec-isakmp 
+ set peer 93.1.1.1
+ set transform-set TS 
+ match address IPSEC1
+crypto map MAP 20 ipsec-isakmp 
+ set peer 93.1.1.2
+ set transform-set TS 
+ match address IPSEC2
+!
+!
+!
+!
+!
+!
+interface Tunnel1
+ ip address 172.16.11.2 255.255.255.0
+ tunnel source FastEthernet5/1
+ tunnel destination 93.1.1.1
+!
+interface Tunnel2
+ bandwidth 10
+ ip address 172.16.21.2 255.255.255.0
+ tunnel source FastEthernet5/1
+ tunnel destination 93.1.1.2
+!
+interface FastEthernet0/0
+ ip address 10.100.100.254 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly in
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 172.16.1.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly in
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ ip address 89.1.1.1 255.255.255.0
+ ip access-group ACL_IN in
+ ip nat outside
+ ip virtual-reassembly in
+ duplex auto
+ speed auto
+ crypto map MAP
+!
+interface Serial6/0
+ ip address 10.1.2.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly in
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ ip address 192.168.234.2 255.255.255.252
+ serial restart-delay 0
+!
+!
+router eigrp 1
+ network 172.16.11.0 0.0.0.255
+ network 172.16.21.0 0.0.0.255
+ redistribute ospf 101 metric 100000 10 255 1 1500
+ redistribute static metric 100000 10 255 1 1500
+!
+router ospf 101
+ redistribute static subnets
+ redistribute eigrp 1 subnets
+ network 10.1.2.0 0.0.0.255 area 0
+ network 10.100.100.0 0.0.0.255 area 0
+ network 172.16.1.0 0.0.0.255 area 0
+ default-information originate
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip nat inside source list NAT interface FastEthernet5/1 overload
+ip route 0.0.0.0 0.0.0.0 89.1.1.254
+ip route 10.0.0.0 255.0.0.0 192.168.234.1
+ip route 172.16.0.0 255.240.0.0 192.168.234.1
+ip route 192.168.0.0 255.255.0.0 192.168.234.1
+!
+ip access-list extended ACL_IN
+ permit udp any host 89.1.1.1 eq isakmp
+ permit gre any host 89.1.1.1
+ permit esp any host 89.1.1.1
+ permit icmp any host 89.1.1.1 echo-reply
+ deny   ip any any
+ip access-list extended IPSEC1
+ permit gre host 89.1.1.1 host 93.1.1.1
+ip access-list extended IPSEC2
+ permit gre host 89.1.1.1 host 93.1.1.2
+ip access-list extended NAT
+ deny   ip any 10.0.0.0 0.255.255.255
+ deny   ip any 172.16.0.0 0.15.255.255
+ deny   ip any 192.168.0.0 0.0.255.255
+ permit ip 10.0.0.0 0.255.255.255 any
+ permit ip 172.16.0.0 0.15.255.255 any
+ permit ip 192.168.0.0 0.0.255.255 any
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+!
+!
+
+!
+! Last configuration change at 12:07:20 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname DC_Berlin_1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+track 1 interface GigabitEthernet1/0 line-protocol
+!
+track 2 interface GigabitEthernet4/0 line-protocol
+!
+track 5 ip sla 1 reachability
+! 
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+crypto isakmp key cisco123 address 89.1.3.1       
+crypto isakmp key cisco123 address 89.1.1.1       
+!
+!
+crypto ipsec transform-set TS esp-aes esp-sha-hmac 
+ mode tunnel
+!
+!
+!
+crypto map MAP 10 ipsec-isakmp 
+ set peer 89.1.3.1
+ set transform-set TS 
+ match address IPSECACL
+crypto map MAP 20 ipsec-isakmp 
+ set peer 89.1.1.1
+ set transform-set TS 
+ match address IPSECACL2
+!
+!
+!
+!
+!
+!
+interface Tunnel1
+ bandwidth 10
+ ip address 172.16.13.1 255.255.255.0
+ tunnel source GigabitEthernet1/0
+ tunnel destination 89.1.3.1
+!
+interface Tunnel2
+ bandwidth 10
+ ip address 172.16.11.1 255.255.255.0
+ tunnel source GigabitEthernet1/0
+ tunnel destination 89.1.1.1
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 93.1.1.1 255.255.255.0
+ ip access-group ACL_IN in
+ standby 11 ip 93.1.1.100
+ standby 11 priority 110
+ standby 11 preempt
+ standby 11 track 2 decrement 20
+ standby 11 track 5 decrement 30
+ negotiation auto
+ crypto map MAP
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 10.10.10.1 255.255.255.0
+ standby 10 ip 10.10.10.254
+ standby 10 priority 110
+ standby 10 preempt
+ standby 10 track 1 decrement 20
+ standby 10 track 5 decrement 30
+ negotiation auto
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+!
+router eigrp 1
+ network 10.10.10.0 0.0.0.255
+ network 172.16.11.0 0.0.0.255
+ network 172.16.13.0 0.0.0.255
+ passive-interface GigabitEthernet4/0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 0.0.0.0 0.0.0.0 93.1.1.254
+ip route 10.6.6.0 255.255.255.0 93.1.1.2
+!
+ip access-list extended ACL_IN
+ permit udp host 93.1.1.2 host 224.0.0.2 eq 1985
+ permit udp any host 93.1.1.1 eq isakmp
+ permit gre any host 93.1.1.1
+ permit esp any host 93.1.1.1
+ permit icmp any host 93.1.1.1 echo-reply
+ deny   ip any any
+ip access-list extended IPSECACL
+ permit gre host 93.1.1.1 host 89.1.3.1
+ip access-list extended IPSECACL2
+ permit gre host 93.1.1.1 host 89.1.1.1
+!
+ip sla auto discovery
+ip sla 1
+ icmp-echo 93.1.1.254
+ threshold 400
+ timeout 500
+ frequency 1
+ip sla schedule 1 life forever start-time now
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!!  !
+!
+!
+
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname DC_Berlin_2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+track 1 interface GigabitEthernet4/0 line-protocol
+!
+track 2 interface GigabitEthernet1/0 line-protocol
+! 
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+crypto isakmp key cisco123 address 89.1.3.1       
+crypto isakmp key cisco123 address 89.1.1.1       
+!
+!
+crypto ipsec transform-set TS esp-aes esp-sha-hmac 
+ mode tunnel
+!
+!
+!
+crypto map MAP 10 ipsec-isakmp 
+ set peer 89.1.3.1
+ set transform-set TS 
+ match address IPSECACL
+crypto map MAP 20 ipsec-isakmp 
+ set peer 89.1.1.1
+ set transform-set TS 
+ match address IPSECACL2
+!
+!
+!
+!
+!
+!
+interface Tunnel1
+ ip address 172.16.23.1 255.255.255.0
+ tunnel source GigabitEthernet1/0
+ tunnel destination 89.1.3.1
+!
+interface Tunnel2
+ ip address 172.16.21.1 255.255.255.0
+ tunnel source GigabitEthernet1/0
+ tunnel destination 89.1.1.1
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 93.1.1.2 255.255.255.0
+ ip access-group ACL_IN in
+ standby 11 ip 93.1.1.100
+ standby 11 priority 105
+ standby 11 preempt
+ standby 11 track 1 decrement 20
+ negotiation auto
+ crypto map MAP
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 10.10.10.2 255.255.255.0
+ standby 10 ip 10.10.10.254
+ standby 10 priority 105
+ standby 10 preempt
+ standby 10 track 2 decrement 20
+ negotiation auto
+!
+interface FastEthernet5/0
+ ip address 192.168.55.2 255.255.255.0
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+!
+router eigrp 1
+ network 10.10.10.0 0.0.0.255
+ network 172.16.21.0 0.0.0.255
+ network 172.16.23.0 0.0.0.255
+ passive-interface GigabitEthernet4/0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 0.0.0.0 0.0.0.0 93.1.1.254
+ip route 10.0.0.0 255.0.0.0 192.168.55.1 171
+ip route 10.6.6.0 255.255.255.0 192.168.55.1
+ip route 172.16.0.0 255.240.0.0 192.168.55.1 171
+ip route 192.168.0.0 255.255.0.0 192.168.55.1 171
+!
+ip access-list extended ACL_IN
+ permit udp host 93.1.1.1 host 224.0.0.2 eq 1985
+ permit ip host 93.1.1.1 host 93.1.1.2
+ permit udp any host 93.1.1.2 eq isakmp
+ permit gre any host 93.1.1.2
+ permit esp any host 93.1.1.2
+ permit icmp any host 93.1.1.2 echo-reply
+ deny   ip any any
+ip access-list extended IPSECACL
+ permit gre host 93.1.1.2 host 89.1.3.1
+ip access-list extended IPSECACL2
+ permit gre host 93.1.1.2 host 89.1.1.1
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+!
+!
+
+!
+! Last configuration change at 12:09:45 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Internet
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback100
+ ip address 8.8.8.8 255.255.255.255
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 93.1.1.254 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ ip address 89.1.1.254 255.255.255.0
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ serial restart-delay 0
+!
+interface Serial6/2
+ ip address 89.1.2.254 255.255.255.0
+ serial restart-delay 0
+!
+interface Serial6/3
+ ip address 89.1.3.254 255.255.255.0
+ serial restart-delay 0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! a!
+!
+!
+
+!
+! Last configuration change at 12:30:40 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ISP_P
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.0.0.254 255.255.255.255
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip address 10.1.1.254 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+ mpls ip
+!
+interface GigabitEthernet3/0
+ ip address 10.1.3.254 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface GigabitEthernet4/0
+ ip address 10.1.4.254 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+mpls ldp router-id Loopback0 force
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname PE_KC
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+ip vrf CAMPUS
+ rd 34594:1
+ route-target export 1:4
+ route-target import 1:1
+ route-target import 1:2
+ route-target import 1:3
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.0.0.4 255.255.255.255
+!
+interface Loopback100
+ ip vrf forwarding CAMPUS
+ ip address 10.200.0.1 255.255.255.255
+ ip ospf network point-to-point
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip vrf forwarding CAMPUS
+ ip address 172.16.4.254 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 10.1.4.4 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 101 vrf CAMPUS
+ area 0 sham-link 10.200.0.1 10.100.0.4
+ redistribute bgp 34594 subnets
+ network 172.16.4.0 0.0.0.255 area 0
+ default-information originate
+!
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+!
+router bgp 34594
+ bgp log-neighbor-changes
+ neighbor 10.0.0.1 remote-as 34594
+ neighbor 10.0.0.1 update-source Loopback0
+ neighbor 10.0.0.3 remote-as 34594
+ neighbor 10.0.0.3 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 10.0.0.1 activate
+  neighbor 10.0.0.1 send-community both
+  neighbor 10.0.0.3 activate
+  neighbor 10.0.0.3 send-community both
+ exit-address-family
+ !
+ address-family ipv4 vrf CAMPUS
+  network 10.200.0.1 mask 255.255.255.255
+  redistribute ospf 101 match internal external 1 external 2
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+mpls ldp router-id Loopback0 force
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!!!
+!
+!
+
+!
+! Last configuration change at 12:09:39 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname PE_OS
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+ip vrf CAMPUS
+ rd 34594:1
+ route-target export 1:3
+ route-target import 1:4
+ route-target import 1:1
+ route-target import 1:2
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.0.0.3 255.255.255.255
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip vrf forwarding CAMPUS
+ ip address 172.16.3.254 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 10.1.3.3 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 101 vrf CAMPUS
+ redistribute bgp 34594 subnets
+ network 172.16.3.0 0.0.0.255 area 0
+!
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+!
+router bgp 34594
+ bgp log-neighbor-changes
+ neighbor 10.0.0.1 remote-as 34594
+ neighbor 10.0.0.1 update-source Loopback0
+ neighbor 10.0.0.4 remote-as 34594
+ neighbor 10.0.0.4 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 10.0.0.1 activate
+  neighbor 10.0.0.1 send-community both
+  neighbor 10.0.0.4 activate
+  neighbor 10.0.0.4 send-community both
+ exit-address-family
+ !
+ address-family ipv4 vrf CAMPUS
+  redistribute ospf 101 match internal external 1 external 2
+  default-information originate
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+mpls ldp router-id Loopback0 force
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!! !
+!
+!
+
+!
+! Last configuration change at 12:19:13 UTC Mon Apr 12 2021
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname PE_ZG
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+ip vrf CAMPUS
+ rd 34594:1
+ route-target export 1:1
+ route-target import 1:4
+ route-target import 1:2
+ route-target import 1:3
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.0.0.1 255.255.255.255
+!
+interface Loopback100
+ ip vrf forwarding CAMPUS
+ ip address 10.100.0.4 255.255.255.255
+ ip ospf network point-to-point
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ ip vrf forwarding CAMPUS
+ ip address 172.16.1.254 255.255.255.0
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ ip address 10.1.1.1 255.255.255.0
+ negotiation auto
+ mpls ip
+!
+interface FastEthernet5/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 101 vrf CAMPUS
+ area 0 sham-link 10.100.0.4 10.200.0.1
+ redistribute bgp 34594 subnets
+ network 172.16.1.0 0.0.0.255 area 0
+ default-information originate
+!
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+!
+router bgp 34594
+ bgp log-neighbor-changes
+ neighbor 10.0.0.3 remote-as 34594
+ neighbor 10.0.0.3 update-source Loopback0
+ neighbor 10.0.0.4 remote-as 34594
+ neighbor 10.0.0.4 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 10.0.0.3 activate
+  neighbor 10.0.0.3 send-community both
+  neighbor 10.0.0.4 activate
+  neighbor 10.0.0.4 send-community both
+ exit-address-family
+ !
+ address-family ipv4 vrf CAMPUS
+  network 10.100.0.4 mask 255.255.255.255
+  redistribute ospf 101 match internal external 1 external 2
+  default-information originate
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+!
+mpls ldp router-id Loopback0 force
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
+!!!!
+!!!!
+!!!!!
+!!!!!!!!!!!!!!!!
+!
+!
+!
+
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname SAT_COM
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.6.6.6 255.255.255.255
+!
+interface FastEthernet0/0
+ no ip address
+ shutdown
+ duplex half
+!
+interface GigabitEthernet1/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet2/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface FastEthernet5/0
+ ip address 192.168.55.1 255.255.255.0
+ duplex auto
+ speed auto
+!
+interface FastEthernet5/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+interface Serial6/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial6/3
+ ip address 192.168.234.1 255.255.255.252
+ serial restart-delay 0
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+ip route 10.0.0.0 255.0.0.0 192.168.234.2
+ip route 10.10.10.0 255.255.255.0 192.168.55.2
+ip route 172.16.0.0 255.240.0.0 192.168.234.2
+ip route 192.168.0.0 255.255.0.0 192.168.234.2
+!
+no cdp log mismatch duplex
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end
