@@ -1,6 +1,43 @@
- https://prnt.sc/26nwo9z !
-!
-!
+http://www.hudop.com/tools/iopse.php
+https://prnt.sc/26nwo9z 
+https://www.diffchecker.com/diff
+
+PROBLEM:
+MREŽA BAKAR CAT7 / OPTIKA
+2 SERVERA FALI - ZBOG FILESERVER ili povečati fileserver
+PREMALI STORAGE - MSA FLASH ARRAY - HPE PRIMERA
+PROBLEM REDUDANCIJA
+NAPAJANJE
+FAILOVER CAPACITY - BAREM
+C SERVER - LOŠ
+PREMALO RAM-A
+HARD DISK
+SQL NA 2 CLUSTERA
+SQL - jači procesor
+Linux server - 2 particije potrebne
+Procesori
+1G U 10G
+
+
+Pogreeške
+
+1.DC nije redudantan
+2. Fali RAM-a za FS  (A)
+3. Fali RAM-za SQL (B)
+4. Fali RAM-za,za redudatnost C 
+5. 2 MSA storrega zbog redudncije
+6  Dodatani slučaji
+7. Struja 
+8. Hlađenje
+9. Failover 
+10. Storage sa Fiber chanel 
+
+
+1. backup svih servera
+2. kako sve backupiram, UPS,
+3. onda spojiti dodatne na switch
+4. ostaviti bakar aktivan, prebaciti na optiku 
+
 
 !
 upgrade fpd auto
